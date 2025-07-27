@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Sistema de Asistencias</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --sidebar-width: 250px;
+            --header-height: 60px;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            position: fixed;
+            background: #2c3e50;
+            color: white;
+            transition: all 0.3s;
+        }
+        
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 20px;
+        }
+        
+        .navbar {
+            height: var(--header-height);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #3498db;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar p-3">
+        <div class="text-center mb-4">
+            <h4>Sistema de Asistencias</h4>
+        </div>
+        <ul class="nav flex-column" id="sidebarMenu">
+            <li class="nav-item">
+                <a class="nav-link text-white" href="dashboard.html">
+                    <i class="bi bi-speedometer2 me-2"></i>Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-white active" href="admin-users.html">
+                    <i class="bi bi-people me-2"></i>Usuarios
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-white" href="#">
+                    <i class="bi bi-book me-2"></i>Grados
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-white" href="#">
+                    <i class="bi bi-clipboard-data me-2"></i>Reportes
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Navbar -->
+        <nav class="navbar navbar-expand navbar-light bg-white">
+            <div class="container-fluid">
+                <div class="ms-auto d-flex align-items-center">
+                    <div class="user-avatar me-2" id="userAvatar">AD</div>
+                    <div>
+                        <span class="fw-bold" id="username">Admin</span>
+                        <div class="text-muted small" id="userRole">Administrador</div>
+                    </div>
+                    <button class="btn btn-link text-dark ms-3" id="logoutBtn">
+                        <i class="bi bi-box-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Dashboard Content -->
+        <div class="container-fluid mt-4">
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <h5 class="card-title">Total Usuarios</h5>
+                            <h2 class="mb-0" id="totalUsers">0</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <h5 class="card-title">Docentes</h5>
+                            <h2 class="mb-0" id="totalTeachers">0</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <h5 class="card-title">Alumnos</h5>
+                            <h2 class="mb-0" id="totalStudents">0</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Actividad Reciente</h5>
+                    <a href="admin-users.html" class="btn btn-sm btn-primary">Ver Todos los Usuarios</a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="recentActivityTable">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Correo</th>
+                                    <th>Rol</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Datos se cargarán con JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Cargar datos del usuario
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Decodificar token para obtener información del usuario
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            document.getElementById('username').textContent = payload.nombre;
+            document.getElementById('userRole').textContent = payload.rol;
+            document.getElementById('userAvatar').textContent = payload.nombre.charAt(0).toUpperCase();
+
+            // Cargar datos del dashboard
+            loadDashboardData();
+        });
+
+        // Cerrar sesión
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('token');
+            window.location.href = 'login.html';
+        });
+
+        // Función para cargar datos del dashboard
+        async function loadDashboardData() {
+            try {
+                const response = await fetch('/api/admin/usuarios', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Error al cargar datos');
+                }
+
+                const users = await response.json();
+                
+                // Actualizar estadísticas
+                document.getElementById('totalUsers').textContent = users.length;
+                document.getElementById('totalTeachers').textContent = users.filter(u => u.rol === 'docente').length;
+                document.getElementById('totalStudents').textContent = users.filter(u => u.rol === 'alumno').length;
+
+                // Mostrar últimos 5 usuarios
+                const recentUsers = users.slice(0, 5);
+                const tbody = document.querySelector('#recentActivityTable tbody');
+                tbody.innerHTML = '';
+
+                recentUsers.forEach(user => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${user.nombre}</td>
+                            <td>${user.correo}</td>
+                            <td><span class="badge bg-${user.rol === 'admin' ? 'danger' : user.rol === 'docente' ? 'primary' : 'success'}">${user.rol}</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary">Ver</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al cargar datos del dashboard');
+            }
+        }
+    </script>
+</body>
+</html>
