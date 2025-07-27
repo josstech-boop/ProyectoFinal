@@ -164,73 +164,269 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Cargar datos del usuario
-        document.addEventListener('DOMContentLoaded', () => {
+        // Variables globales
+        let currentPage = 1;
+        const itemsPerPage = 10;
+        let allUsers = [];
+        let filteredUsers = [];
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', async () => {
             const token = localStorage.getItem('token');
             if (!token) {
                 window.location.href = 'login.html';
                 return;
             }
 
-            // Decodificar token para obtener información del usuario
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            document.getElementById('username').textContent = payload.nombre;
-            document.getElementById('userRole').textContent = payload.rol;
-            document.getElementById('userAvatar').textContent = payload.nombre.charAt(0).toUpperCase();
-
-            // Cargar datos del dashboard
-            loadDashboardData();
-        });
-
-        // Cerrar sesión
-        document.getElementById('logoutBtn').addEventListener('click', () => {
-            localStorage.removeItem('token');
-            window.location.href = 'login.html';
-        });
-
-        // Función para cargar datos del dashboard
-        async function loadDashboardData() {
             try {
-                const response = await fetch('/api/admin/usuarios', {
+                // Decodificar token con manejo seguro
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                console.log("Payload decodificado:", payload);
+
+                // Manejo seguro de los datos del usuario
+                const usernameElement = document.getElementById('username');
+                const userRoleElement = document.getElementById('userRole');
+                const userAvatarElement = document.getElementById('userAvatar');
+
+                if (usernameElement) {
+                    usernameElement.textContent = payload.nombre || 'Usuario';
+                }
+
+                if (userRoleElement) {
+                    userRoleElement.textContent = payload.rol || 'Rol no definido';
+                }
+
+                if (userAvatarElement) {
+                    const userName = payload.nombre || 'U';
+                    userAvatarElement.textContent = userName.charAt(0).toUpperCase();
+                }
+
+                // Cargar usuarios
+                await loadUsers();
+
+            } catch (error) {
+                console.error("Error al inicializar:", error);
+                window.location.href = 'login.html';
+            }
+
+            // Event listeners
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+            document.getElementById('addUserBtn')?.addEventListener('click', showAddUserModal);
+            document.getElementById('saveUserBtn')?.addEventListener('click', saveUser);
+            document.getElementById('searchInput')?.addEventListener('input', filterUsers);
+            document.getElementById('roleFilter')?.addEventListener('change', filterUsers);
+            document.getElementById('resetFiltersBtn')?.addEventListener('click', resetFilters);
+        });
+
+        // Función para cargar usuarios desde la API
+        async function loadUsers() {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) throw new Error('No hay token disponible');
+
+                const response = await fetch('http://localhost:5000/api/admin/usuarios', {
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
                     }
                 });
-                
+
+                console.log("Respuesta del servidor:", response);
+
+                if (response.status === 401) { // Token inválido
+                    logout();
+                    return;
+                }
+
                 if (!response.ok) {
-                    throw new Error('Error al cargar datos');
+                    const error = await response.text();
+                    throw new Error(error || "Error al cargar usuarios");
                 }
 
                 const users = await response.json();
-                
-                // Actualizar estadísticas
+                console.log("Usuarios recibidos:", users);
+
+                allUsers = users;
+                filteredUsers = [...users];
+                renderUsers();
+                renderPagination();
+
+                // Actualizar contadores del dashboard
                 document.getElementById('totalUsers').textContent = users.length;
-                document.getElementById('totalTeachers').textContent = users.filter(u => u.rol === 'docente').length;
-                document.getElementById('totalStudents').textContent = users.filter(u => u.rol === 'alumno').length;
+                document.getElementById('totalTeachers').textContent = 
+                    users.filter(u => u.rol === 'docente').length;
+                document.getElementById('totalStudents').textContent = 
+                    users.filter(u => u.rol === 'alumno').length;
 
-                // Mostrar últimos 5 usuarios
-                const recentUsers = users.slice(0, 5);
-                const tbody = document.querySelector('#recentActivityTable tbody');
-                tbody.innerHTML = '';
+            } catch (error) {
+                console.error("Error en loadUsers():", error);
+                alert("Error al cargar usuarios: " + error.message);
+            }
+        }
 
-                recentUsers.forEach(user => {
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${user.nombre}</td>
-                            <td>${user.correo}</td>
-                            <td><span class="badge bg-${user.rol === 'admin' ? 'danger' : user.rol === 'docente' ? 'primary' : 'success'}">${user.rol}</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-outline-primary">Ver</button>
-                            </td>
-                        </tr>
-                    `;
+        // Función para renderizar usuarios en la tabla
+        function renderUsers() {
+            const tbody = document.querySelector('#recentActivityTable tbody');
+            if (!tbody) return;
+
+            tbody.innerHTML = '';
+
+            const usersToShow = filteredUsers.slice(0, 5); // Mostrar solo 5 recientes
+
+            if (usersToShow.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center">No se encontraron usuarios</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            usersToShow.forEach(user => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${user.nombre || 'Sin nombre'}</td>
+                    <td>${user.correo || 'Sin correo'}</td>
+                    <td>
+                        <span class="badge bg-${user.rol === 'admin' ? 'danger' : 
+                             user.rol === 'docente' ? 'primary' : 'success'}">
+                            ${user.rol || 'Sin rol'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary">Ver</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Función para guardar usuario (crear o actualizar)
+        async function saveUser() {
+            const btn = document.getElementById('saveUserBtn');
+            if (!btn) return;
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Guardando...';
+
+            try {
+                const userData = {
+                    nombre: document.getElementById('name')?.value.trim(),
+                    correo: document.getElementById('email')?.value.trim(),
+                    password: document.getElementById('password')?.value,
+                    rol: document.getElementById('role')?.value
+                };
+
+                // Validaciones
+                if (!userData.nombre || !userData.correo || !userData.rol) {
+                    throw new Error('Todos los campos son obligatorios');
+                }
+
+                const token = localStorage.getItem('token');
+                if (!token) throw new Error('No hay sesión activa');
+
+                const response = await fetch('http://localhost:5000/api/admin/usuarios', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(userData)
                 });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Error al guardar usuario');
+                }
+
+                // Cerrar modal y actualizar
+                const modal = bootstrap.Modal.getInstance(document.getElementById('userModal'));
+                if (modal) modal.hide();
+
+                await loadUsers();
+                alert('Usuario creado exitosamente!');
 
             } catch (error) {
                 console.error('Error:', error);
-                alert('Error al cargar datos del dashboard');
+                alert('Error: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Guardar';
             }
         }
+
+        // Función para cerrar sesión
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = 'login.html';
+        }
+
+        // Otras funciones (filtros, paginación, etc.)
+        function filterUsers() {
+            const searchTerm = document.getElementById('searchInput')?.value.toLowerCase() || '';
+            const roleFilter = document.getElementById('roleFilter')?.value;
+
+            filteredUsers = allUsers.filter(user => {
+                const matchesSearch = user.nombre?.toLowerCase().includes(searchTerm) || 
+                                     user.correo?.toLowerCase().includes(searchTerm);
+                const matchesRole = roleFilter ? user.rol === roleFilter : true;
+                
+                return matchesSearch && matchesRole;
+            });
+
+            currentPage = 1;
+            renderUsers();
+            renderPagination();
+        }
+
+        function resetFilters() {
+            if (document.getElementById('searchInput')) document.getElementById('searchInput').value = '';
+            if (document.getElementById('roleFilter')) document.getElementById('roleFilter').value = '';
+            filteredUsers = [...allUsers];
+            currentPage = 1;
+            renderUsers();
+            renderPagination();
+        }
+
+        // Funciones de paginación
+        function renderPagination() {
+            const pagination = document.getElementById('pagination');
+            if (!pagination) return;
+
+            const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+            pagination.innerHTML = '';
+
+            if (totalPages <= 1) return;
+
+            // Botón Anterior
+            pagination.innerHTML += `
+                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="changePage(${currentPage - 1})">Anterior</a>
+                </li>
+            `;
+
+            // Números de página
+            for (let i = 1; i <= totalPages; i++) {
+                pagination.innerHTML += `
+                    <li class="page-item ${i === currentPage ? 'active' : ''}">
+                        <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
+                    </li>
+                `;
+            }
+
+            // Botón Siguiente
+            pagination.innerHTML += `
+                <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="changePage(${currentPage + 1})">Siguiente</a>
+                </li>
+            `;
+        }
+
+        window.changePage = function(page) {
+            currentPage = page;
+            renderUsers();
+            window.scrollTo(0, 0);
+        };
     </script>
 </body>
 </html>

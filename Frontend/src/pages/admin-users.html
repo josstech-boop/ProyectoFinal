@@ -213,6 +213,58 @@
             </div>
         </div>
     </div>
+    <script>
+document.getElementById('addUserBtn').addEventListener('click', () => {
+  // Limpia el formulario y muestra el modal
+  document.getElementById('userForm').reset();
+  document.getElementById('modalTitle').textContent = 'Agregar Usuario';
+  new bootstrap.Modal(document.getElementById('userModal')).show();
+});
+
+document.getElementById('saveUserBtn').addEventListener('click', async () => {
+  const nombre = document.getElementById('name').value.trim();
+  const correo = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value.trim();
+  const rol = document.getElementById('role').value;
+
+  if (!nombre || !correo || !rol || !password) {
+    alert('Por favor, complete todos los campos.');
+    return;
+  }
+
+  try {
+const token = localStorage.getItem('token');
+if (!token) {
+  alert('Debe iniciar sesión para realizar esta acción.');
+  return;
+}
+
+const response = await fetch('http://localhost:5000/api/admin/usuarios', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+  },
+  body: JSON.stringify({ nombre, correo, password, rol })
+});
+
+    const result = await response.json();
+
+    if (response.ok) {
+      alert('Usuario registrado con éxito');
+      // Aquí puedes cerrar el modal y actualizar la tabla de usuarios
+      bootstrap.Modal.getInstance(document.getElementById('userModal')).hide();
+      document.getElementById('userForm').reset();
+      // Actualizar tabla (si tienes una función, por ejemplo: cargarUsuarios())
+    } else {
+      alert('Error al registrar usuario: ' + result.error);
+    }
+  } catch (error) {
+    console.error('Error al enviar solicitud:', error);
+    alert('Ocurrió un error inesperado.');
+  }
+});
+</script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -426,82 +478,89 @@
         };
 
         // Función para guardar usuario (crear o actualizar)
-        async function saveUser() {
-            const form = document.getElementById('userForm');
-            if (!form.checkValidity()) {
-                form.classList.add('was-validated');
-                return;
-            }
+        // Función para guardar usuario (versión mejorada)
+async function saveUser() {
+    const form = document.getElementById('userForm');
+    const nombre = document.getElementById('name').value.trim();
+    const correo = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const rol = document.getElementById('role').value;
+    const userId = document.getElementById('userId').value;
 
-            const userId = document.getElementById('userId').value;
-            const userData = {
-                nombre: document.getElementById('name').value,
-                correo: document.getElementById('email').value,
-                rol: document.getElementById('role').value
-            };
+    // Validación mejorada
+    if (!nombre || !correo || !rol) {
+        alert('Por favor complete todos los campos obligatorios');
+        return;
+    }
 
-            // Solo incluir password si es un nuevo usuario o si se cambió
-            const password = document.getElementById('password').value;
-            if (password) {
-                userData.password = password;
-            }
+    if (!userId && !password) {
+        alert('Para nuevos usuarios, la contraseña es obligatoria');
+        return;
+    }
 
-            try {
-                const url = userId ? `/api/admin/usuarios/${userId}` : '/api/admin/usuarios';
-                const method = userId ? 'PUT' : 'POST';
-
-                const response = await fetch(url, {
-                    method,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    },
-                    body: JSON.stringify(userData)
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'Error al guardar usuario');
-                }
-
-                // Cerrar modal y recargar datos
-                bootstrap.Modal.getInstance(document.getElementById('userModal')).hide();
-                loadUsers();
-                
-            } catch (error) {
-                console.error('Error:', error);
-                alert(error.message);
-            }
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = 'login.html';
+            return;
         }
 
-        // Función para confirmar eliminación
-        window.confirmDelete = function(userId) {
-            if (confirm('¿Estás seguro de eliminar este usuario?')) {
-                deleteUser(userId);
-            }
-        };
+        const userData = { nombre, correo, rol };
+        if (password) userData.password = password;
 
-        // Función para eliminar usuario
-        async function deleteUser(userId) {
-            try {
-                const response = await fetch(`/api/admin/usuarios/${userId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
-                });
+        const url = userId ? `http://localhost:5000/api/admin/usuarios/${userId}` : 'http://localhost:5000/api/admin/usuarios';
+        const method = userId ? 'PUT' : 'POST';
 
-                if (!response.ok) {
-                    throw new Error('Error al eliminar usuario');
-                }
+        const response = await fetch(url, {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(userData)
+        });
 
-                loadUsers();
-                
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Error al eliminar usuario');
-            }
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || 'Error en la operación');
         }
+
+        // Cierre y actualización
+        bootstrap.Modal.getInstance(document.getElementById('userModal')).hide();
+        await loadUsers(); // Espera a que se recarguen los usuarios
+        
+        alert(`Usuario ${userId ? 'actualizado' : 'creado'} correctamente`);
+        
+    } catch (error) {
+        console.error('Error detallado:', error);
+        alert(`Error: ${error.message}`);
+    }
+}
+
+// Función para eliminar usuario (corregida)
+async function deleteUser(userId) {
+    try {
+        const response = await fetch(`http://localhost:5000/api/admin/usuarios/${userId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Error al eliminar');
+        }
+
+        await loadUsers(); // Recargar la lista después de eliminar
+        alert('Usuario eliminado correctamente');
+        
+    } catch (error) {
+        console.error('Error al eliminar:', error);
+        alert(`Error al eliminar usuario: ${error.message}`);
+    }
+}
 
         // Función para cerrar sesión
         function logout() {

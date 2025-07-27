@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Alumno - Historial de Asistencias</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .estado-presente { color: green; font-weight: bold; }
+        .estado-ausente { color: red; font-weight: bold; }
+        .estado-justificado { color: orange; font-weight: bold; }
+        .card-porcentaje { background-color: #f8f9fa; border-radius: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-12">
+                <h2 class="text-center mb-4">Mi Historial de Asistencias</h2>
+                
+                <!-- Tarjeta de Porcentaje -->
+                <div class="card card-porcentaje mb-4 p-3">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Asistencia Total</h5>
+                        <div class="display-4" id="porcentaje">0%</div>
+                    </div>
+                </div>
+
+                <!-- Filtros -->
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="fechaInicio" class="form-label">Desde:</label>
+                        <input type="date" id="fechaInicio" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="fechaFin" class="form-label">Hasta:</label>
+                        <input type="date" id="fechaFin" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="estado" class="form-label">Estado:</label>
+                        <select id="estado" class="form-select">
+                            <option value="">Todos</option>
+                            <option value="presente">Presente</option>
+                            <option value="ausente">Ausente</option>
+                            <option value="justificado">Justificado</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Tabla de Asistencias -->
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover" id="tabla-asistencias">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Grado</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = 'login.html'; // Redirige si no hay token
+        return;
+    }
+
+    // Elementos del DOM
+    const tabla = document.querySelector('#tabla-asistencias tbody');
+    const porcentajeElement = document.getElementById('porcentaje');
+    const fechaInicioInput = document.getElementById('fechaInicio');
+    const fechaFinInput = document.getElementById('fechaFin');
+    const estadoSelect = document.getElementById('estado');
+
+    // Cargar datos iniciales
+    cargarHistorial();
+
+    // Event listeners para filtros
+    [fechaInicioInput, fechaFinInput, estadoSelect].forEach(element => {
+        element.addEventListener('change', cargarHistorial);
+    });
+
+    // Función para cargar el historial con filtros
+    async function cargarHistorial() {
+        try {
+            const params = new URLSearchParams();
+            if (fechaInicioInput.value) params.append('fechaInicio', fechaInicioInput.value);
+            if (fechaFinInput.value) params.append('fechaFin', fechaFinInput.value);
+            if (estadoSelect.value) params.append('estado', estadoSelect.value);
+
+            const response = await fetch(`http://localhost:5000/api/asistencia/historial?${params.toString()}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (!response.ok) throw new Error('Error al cargar datos');
+
+            const { historial, porcentaje } = await response.json();
+
+            // Actualizar porcentaje
+            porcentajeElement.textContent = `${porcentaje}%`;
+
+            // Limpiar y llenar tabla
+            tabla.innerHTML = '';
+            historial.forEach(asistencia => {
+                const fila = document.createElement('tr');
+                fila.innerHTML = `
+                    <td>${new Date(asistencia.fecha).toLocaleDateString('es-ES')}</td>
+                    <td>${asistencia.grado?.nombre || 'N/A'}</td>
+                    <td class="estado-${asistencia.estado}">${asistencia.estado.toUpperCase()}</td>
+                `;
+                tabla.appendChild(fila);
+            });
+
+        } catch (error) {
+            console.error('Error:', error);
+            alert('No se pudo cargar el historial');
+        }
+    }
+});
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="alumno.js"></script> <!-- Archivo JavaScript propio -->
+</body>
+</html>
