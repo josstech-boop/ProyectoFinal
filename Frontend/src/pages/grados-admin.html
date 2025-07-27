@@ -90,6 +90,11 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a class="nav-link text-white" href="asignacion-alumnos.html">
+                    <i class="bi bi-person-plus me-2"></i>Asignar Alumnos
+                </a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link text-white" href="docente-asistencia.html">
                     <i class="bi bi-clipboard-data me-2"></i>Reportes
                 </a>
@@ -325,7 +330,8 @@
             const grade = allGrades.find(g => g.id == gradeId);
             if (grade) {
                 document.getElementById('gradeName').value = grade.nombre;
-                document.getElementById('gradeTeacher').value = grade.docente_id || '';
+                document.getElementById('gradeTeacher').value = grade.docente_id ? String(grade.docente_id) : '';
+
             }
         }
         
@@ -334,45 +340,50 @@
 
     // Guardar grado (crear o actualizar)
     async function saveGrade() {
-        const gradeId = document.getElementById('gradeId').value;
-        const nombre = document.getElementById('gradeName').value.trim();
-        const docenteId = document.getElementById('gradeTeacher').value || null;
-        
-        if (!nombre) {
-            alert('El nombre del grado es obligatorio');
-            return;
-        }
-        
-        try {
-            const token = localStorage.getItem('token');
-            const method = gradeId ? 'PUT' : 'POST';
-            const url = gradeId 
-                ? `http://localhost:5000/api/admin/grados/${gradeId}`
-                : 'http://localhost:5000/api/admin/grados';
-            
-            const response = await fetch(url, {
-                method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ nombre, docente_id: docenteId })
-            });
-            
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Error al guardar grado');
-            }
-            
-            await loadGrades();
-            bootstrap.Modal.getInstance(document.getElementById('gradeModal')).hide();
-            alert(`Grado ${gradeId ? 'actualizado' : 'creado'} correctamente`);
-            
-        } catch (error) {
-            console.error("Error al guardar grado:", error);
-            alert(`Error: ${error.message}`);
-        }
+    const gradeId = document.getElementById('gradeId').value;
+    const nombre = document.getElementById('gradeName').value.trim();
+    const docenteValue = document.getElementById('gradeTeacher').value;
+    const docenteId = docenteValue === "" ? null : Number(docenteValue);
+
+    if (!nombre) {
+        alert('El nombre del grado es obligatorio');
+        return;
     }
+
+    console.log({ nombre, docente_id: docenteId }); // Agrega esta línea para depurar
+
+    try {
+        const token = localStorage.getItem('token');
+        const method = gradeId ? 'PUT' : 'POST';
+        const url = gradeId 
+            ? `http://localhost:5000/api/admin/grados/${gradeId}`
+            : 'http://localhost:5000/api/admin/grados';
+        console.log({ nombre, docente_id: docenteId });
+
+        const response = await fetch(url, {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ nombre, docente_id: docenteId })  // Aquí es donde se envía
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Error al guardar grado');
+        }
+        
+        await loadGrades();
+        bootstrap.Modal.getInstance(document.getElementById('gradeModal')).hide();
+        alert(`Grado ${gradeId ? 'actualizado' : 'creado'} correctamente`);
+        
+    } catch (error) {
+        console.error("Error al guardar grado:", error);
+        alert(`Error: ${error.message}`);
+    }
+}
+
 
     // Renderizar la tabla de grados
     function renderGrades() {
