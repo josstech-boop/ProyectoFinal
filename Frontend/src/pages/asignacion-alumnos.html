@@ -14,7 +14,6 @@
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f8f9fa;
         }
         
         .sidebar {
@@ -23,6 +22,7 @@
             position: fixed;
             background: #2c3e50;
             color: white;
+            transition: all 0.3s;
         }
         
         .main-content {
@@ -39,6 +39,11 @@
             border: none;
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
         }
         
         .user-avatar {
@@ -52,26 +57,23 @@
             justify-content: center;
             font-weight: bold;
         }
-        
-        #loadingSpinner {
-            display: none;
-        }
     </style>
 </head>
 <body>
     <!-- Sidebar -->
     <div class="sidebar p-3">
         <div class="text-center mb-4">
-            <h4>Sistema Escolar</h4>
+            <h4>Sistema de Asistencias</h4>
         </div>
-        <ul class="nav flex-column">
+        <ul class="nav flex-column" id="sidebarMenu">
+            <li class="nav-item">
             <li class="nav-item">
                 <a class="nav-link text-white" href="dashboard.html">
                     <i class="bi bi-speedometer2 me-2"></i>Dashboard
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link text-white" href="admin-users.html">
+                <a class="nav-link text-white active" href="admin-users.html">
                     <i class="bi bi-people me-2"></i>Usuarios
                 </a>
             </li>
@@ -81,13 +83,13 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link text-white active" href="asignacion-alumnos.html">
+                <a class="nav-link text-white" href="asignacion-alumnos.html">
                     <i class="bi bi-person-plus me-2"></i>Asignar Alumnos
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link text-white" href="docente-asistencia.html">
-                    <i class="bi bi-clipboard-data me-2"></i>Reportes
+                    <i class="bi bi-clipboard-data me-2"></i>Asistencia
                 </a>
             </li>
         </ul>
@@ -99,14 +101,8 @@
         <nav class="navbar navbar-expand navbar-light bg-white">
             <div class="container-fluid">
                 <div class="ms-auto d-flex align-items-center">
-                    <div class="user-avatar me-2" id="userAvatar">AD</div>
-                    <div>
-                        <span class="fw-bold" id="username">Admin</span>
-                        <div class="text-muted small" id="userRole">Administrador</div>
-                    </div>
-                    <button class="btn btn-link text-dark ms-3" id="logoutBtn">
-                        <i class="bi bi-box-arrow-right"></i>
-                    </button>
+                    <div class="user-avatar me-2">AD</div>
+                    <span class="fw-bold">Administrador</span>
                 </div>
             </div>
         </nav>
@@ -135,7 +131,6 @@
                     <div class="text-end">
                         <button id="btnAsignar" class="btn btn-primary">
                             <i class="bi bi-save me-2"></i>Asignar
-                            <span id="loadingSpinner" class="spinner-border spinner-border-sm d-none"></span>
                         </button>
                     </div>
                 </div>
@@ -169,227 +164,154 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Variables globales
-        let alumnos = [];
-        let grados = [];
-        let asignaciones = [];
+<script>
+  let asignaciones = [];
 
-        // Inicialización
-        document.addEventListener('DOMContentLoaded', async () => {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                window.location.href = 'login.html';
-                return;
-            }
+  document.addEventListener('DOMContentLoaded', async () => {
+    await cargarAlumnosDesdeAPI();
+    await cargarGradosDesdeAPI();
+    await cargarAsignacionesDesdeAPI();
 
-            try {
-                // Decodificar token para obtener información del usuario
-                const payload = JSON.parse(atob(token.split('.')[1]));
-                
-                // Mostrar información del usuario en el navbar
-                document.getElementById('username').textContent = payload.nombre || 'Usuario';
-                document.getElementById('userRole').textContent = payload.rol || 'Administrador';
-                document.getElementById('userAvatar').textContent = payload.nombre?.charAt(0).toUpperCase() || 'A';
+    document.getElementById('btnAsignar').addEventListener('click', asignarAlumnoAGrado);
+  });
 
-                // Cargar datos iniciales
-                await cargarDatosIniciales();
-                document.getElementById('btnAsignar').addEventListener('click', asignarAlumnoAGrado);
-                document.getElementById('logoutBtn').addEventListener('click', logout);
+  async function cargarAlumnosDesdeAPI() {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('http://localhost:5000/api/alumnos', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
 
-            } catch (error) {
-                console.error("Error al inicializar:", error);
-                window.location.href = 'login.html';
-            }
-        });
 
-        // Cargar datos iniciales desde la base de datos
-        async function cargarDatosIniciales() {
-            try {
-                const token = localStorage.getItem('token');
-                
-                // Cargar alumnos (usuarios con rol 'alumno')
-                const alumnosResponse = await fetch('http://localhost:5000/api/admin/usuarios?rol=alumno', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (!alumnosResponse.ok) throw new Error('Error al cargar alumnos');
-                alumnos = await alumnosResponse.json();
-                
-                // Cargar grados
-                const gradosResponse = await fetch('http://localhost:5000/api/admin/grados', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (!gradosResponse.ok) throw new Error('Error al cargar grados');
-                grados = await gradosResponse.json();
-                
-                // Cargar asignaciones actuales (alumnos_grados)
-                const asignacionesResponse = await fetch('http://localhost:5000/api/admin/alumnos-grados', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (!asignacionesResponse.ok) throw new Error('Error al cargar asignaciones');
-                asignaciones = await asignacionesResponse.json();
-                
-                // Llenar selects y tabla
-                llenarSelectAlumnos();
-                llenarSelectGrados();
-                actualizarTablaAsignaciones();
-                
-            } catch (error) {
-                console.error("Error al cargar datos:", error);
-                alert("Error al cargar datos: " + error.message);
-                
-                // Mostrar mensaje de error en la tabla
-                document.querySelector('#tablaAsignaciones tbody').innerHTML = `
-                    <tr>
-                        <td colspan="3" class="text-center text-danger">Error al cargar datos: ${error.message}</td>
-                    </tr>
-                `;
-            }
-        }
+      if (!res.ok) throw new Error('No se pudieron cargar los alumnos');
+      const usuarios = await res.json();
 
-        // Llenar select de alumnos
-        function llenarSelectAlumnos() {
-            const select = document.getElementById('selectAlumno');
-            select.innerHTML = '<option value="">Seleccionar alumno</option>';
-            
-            alumnos.forEach(alumno => {
-                select.innerHTML += `<option value="${alumno.id}">${alumno.nombre}</option>`;
-            });
-        }
+      const select = document.getElementById('selectAlumno');
+      select.innerHTML = '<option value="">Seleccionar alumno</option>';
+      usuarios.forEach(usuarios => {
+        select.innerHTML += `<option value="${usuarios.id}">${usuarios.nombre}</option>`;
+      });
 
-        // Llenar select de grados
-        function llenarSelectGrados() {
-            const select = document.getElementById('selectGrado');
-            select.innerHTML = '<option value="">Seleccionar grado</option>';
-            
-            grados.forEach(grado => {
-                select.innerHTML += `<option value="${grado.id}">${grado.nombre}</option>`;
-            });
-        }
+    } catch (error) {
+      console.error('Error al cargar alumnos:', error);
+      alert('Error al cargar alumnos');
+    }
+  }
 
-        // Asignar alumno a grado
-        async function asignarAlumnoAGrado() {
-            const alumnoId = document.getElementById('selectAlumno').value;
-            const gradoId = document.getElementById('selectGrado').value;
-            
-            if (!alumnoId || !gradoId) {
-                alert("Debe seleccionar un alumno y un grado");
-                return;
-            }
-            
-            try {
-                const token = localStorage.getItem('token');
-                const btn = document.getElementById('btnAsignar');
-                const spinner = document.getElementById('loadingSpinner');
-                
-                btn.disabled = true;
-                spinner.classList.remove('d-none');
-                
-                // Llamada a la API para guardar la asignación
-                const response = await fetch('http://localhost:5000/api/admin/alumnos-grados', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ 
-                        alumno_id: alumnoId, 
-                        grado_id: gradoId 
-                    })
-                });
-                
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.message || 'Error al asignar');
-                }
-                
-                // Recargar las asignaciones después de guardar
-                const asignacionesResponse = await fetch('http://localhost:5000/api/admin/alumnos-grados', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (!asignacionesResponse.ok) throw new Error('Error al cargar asignaciones');
-                asignaciones = await asignacionesResponse.json();
-                
-                actualizarTablaAsignaciones();
-                alert("Asignación realizada con éxito");
-                
-            } catch (error) {
-                console.error("Error al asignar:", error);
-                alert("Error al realizar la asignación: " + error.message);
-            } finally {
-                const btn = document.getElementById('btnAsignar');
-                const spinner = document.getElementById('loadingSpinner');
-                btn.disabled = false;
-                spinner.classList.add('d-none');
-            }
-        }
+  async function cargarGradosDesdeAPI() {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('http://localhost:5000/api/admin/grados', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
 
-        // Actualizar tabla de asignaciones
-        function actualizarTablaAsignaciones() {
-            const tbody = document.querySelector('#tablaAsignaciones tbody');
-            
-            if (asignaciones.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="3" class="text-center">No hay asignaciones registradas</td></tr>';
-                return;
-            }
-            
-            tbody.innerHTML = '';
-            asignaciones.forEach(asig => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${asig.alumno_nombre}</td>
-                        <td>${asig.grado_nombre}</td>
-                        <td>
-                            <button class="btn btn-sm btn-danger" onclick="eliminarAsignacion(${asig.alumno_id}, ${asig.grado_id})">
-                                <i class="bi bi-trash"></i> Eliminar
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
+      if (!res.ok) throw new Error('No se pudieron cargar los grados');
+      const grados = await res.json();
 
-        // Eliminar asignación (ajustado para tu estructura de clave compuesta)
-        window.eliminarAsignacion = async function(alumnoId, gradoId) {
-            if (confirm("¿Está seguro de eliminar esta asignación?")) {
-                try {
-                    const token = localStorage.getItem('token');
-                    
-                    // Llamada a la API para eliminar
-                    const response = await fetch(`http://localhost:5000/api/admin/alumnos-grados`, {
-                        method: 'DELETE',
-                        headers: { 
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
-                        },
-                        body: JSON.stringify({
-                            alumno_id: alumnoId,
-                            grado_id: gradoId
-                        })
-                    });
-                    
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.message || 'Error al eliminar');
-                    }
-                    
-                    // Actualizar lista local
-                    asignaciones = asignaciones.filter(a => !(a.alumno_id == alumnoId && a.grado_id == gradoId));
-                    actualizarTablaAsignaciones();
-                    alert("Asignación eliminada con éxito");
-                    
-                } catch (error) {
-                    console.error("Error al eliminar:", error);
-                    alert("Error al eliminar asignación: " + error.message);
-                }
-            }
-        };
+      const select = document.getElementById('selectGrado');
+      select.innerHTML = '<option value="">Seleccionar grado</option>';
+      grados.forEach(grado => {
+        select.innerHTML += `<option value="${grado.id}">${grado.nombre}</option>`;
+      });
 
-        // Función para cerrar sesión
-        function logout() {
-            localStorage.removeItem('token');
-            window.location.href = 'login.html';
-        }
-    </script>
+    } catch (error) {
+      console.error('Error al cargar grados:', error);
+      alert('Error al cargar grados');
+    }
+  }
+
+  async function cargarAsignacionesDesdeAPI() {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('http://localhost:5000/api/admin/asignaciones', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (!res.ok) throw new Error('No se pudieron cargar las asignaciones');
+      asignaciones = await res.json();
+      actualizarTablaAsignaciones();
+
+    } catch (error) {
+      console.error('Error al cargar asignaciones:', error);
+      alert('Error al cargar asignaciones');
+    }
+  }
+
+  async function asignarAlumnoAGrado() {
+    const alumnoId = document.getElementById('selectAlumno').value;
+    const gradoId = document.getElementById('selectGrado').value;
+    const token = localStorage.getItem('token');
+
+    if (!alumnoId || !gradoId) {
+      alert("Debe seleccionar un alumno y un grado");
+      return;
+    }
+
+    try {
+      const res = await fetch('http://localhost:5000/api/asignacion-grado', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ alumno_id: alumnoId, grado_id: gradoId })
+      });
+
+      if (!res.ok) throw new Error('No se pudo asignar el alumno');
+
+      alert('Asignación guardada con éxito');
+      await cargarAsignacionesDesdeAPI();
+
+    } catch (error) {
+      console.error('Error al asignar alumno:', error);
+      alert('Error al asignar alumno');
+    }
+  }
+
+  async function eliminarAsignacion(id) {
+    const token = localStorage.getItem('token');
+
+    try {
+      const res = await fetch(`http://localhost:5000/api/admin/asignaciones/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (!res.ok) throw new Error('No se pudo eliminar la asignación');
+
+      alert('Asignación eliminada');
+      await cargarAsignacionesDesdeAPI();
+
+    } catch (error) {
+      console.error('Error al eliminar asignación:', error);
+      alert('Error al eliminar asignación');
+    }
+  }
+
+  function actualizarTablaAsignaciones() {
+    const tbody = document.querySelector('#tablaAsignaciones tbody');
+    tbody.innerHTML = '';
+
+    if (asignaciones.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="3" class="text-center">No hay asignaciones registradas</td></tr>';
+      return;
+    }
+
+    asignaciones.forEach(asig => {
+      tbody.innerHTML += `
+        <tr>
+          <td>${asig.alumno_nombre} ${asig.alumno_apellido}</td>
+          <td>${asig.grado_nombre}</td>
+          <td>
+            <button class="btn btn-sm btn-danger" onclick="eliminarAsignacion(${asig.id})">
+              <i class="bi bi-trash"></i> Eliminar
+            </button>
+          </td>
+        </tr>
+      `;
+    });
+  }
+</script>
+
 </body>
 </html>

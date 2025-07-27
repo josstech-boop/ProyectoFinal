@@ -1,7 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const alumnoController = require('../controllers/alumno.controller');
+const verifyToken = require('../middlewares/auth.middleware');
+const { getAlumnos } = require('../controllers/alumno.controller');
 
-router.get('/grados/:gradoId/alumnos', alumnoController.getAlumnosByGrado);
+// Proteger todas las rutas con token
+router.use(verifyToken);
+
+// Ruta: GET /api/alumnos
+router.get('/', getAlumnos);
 
 module.exports = router;

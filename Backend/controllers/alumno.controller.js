@@ -1,17 +1,17 @@
-const pool = require('../database');
+const db = require('../database');
 
-exports.getAlumnosByGrado = async (req, res) => {
+// Obtener todos los usuarios con rol 'alumno'
+const getAlumnos = async (req, res) => {
   try {
-    const { gradoId } = req.params;
-    const query = `
-      SELECT u.id, u.nombre, u.apellido 
-      FROM usuarios u
-      INNER JOIN alumnos_grados ag ON u.id = ag.alumno_id
-      WHERE ag.grado_id = $1 AND u.rol = 'alumno'
-    `;
-    const { rows } = await pool.query(query, [gradoId]);
+    const { rows } = await db.query(
+      'SELECT id, nombre, correo FROM usuarios WHERE rol = $1',
+      ['alumno']
+    );
     res.json(rows);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Error al obtener alumnos:', error);
+    res.status(500).json({ error: 'Error al obtener alumnos' });
   }
 };
+
+module.exports = { getAlumnos };
