@@ -8,6 +8,8 @@ const gradoRoutes = require('./routes/grado.routes.js'); // ajusta ruta según e
 const alumnosGradoRoutes = require('./routes/alumnos-grado.routes');
 const alumnoRoutes = require('./routes/alumno.routes');
 const asignacionRoutes = require('./routes/asignacion.routes');
+const asistenciaRoutes = require('./routes/asistencia.routes');
+
 const app = express();
 
 // Middlewares
@@ -21,6 +23,9 @@ app.use('/api/admin/alumnos-grado', alumnosGradoRoutes);
 app.use('/api/admin/grados', gradoRoutes);
 app.use('/api/alumnos', alumnoRoutes);
 app.use('/api', asignacionRoutes);
+app.use('/api', asistenciaRoutes);
+
+
 
 // Iniciar servidor
 const PORT = process.env.PORT || 5000;
