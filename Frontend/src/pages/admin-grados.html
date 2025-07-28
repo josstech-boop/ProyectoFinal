@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Usuarios</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --sidebar-width: 250px;
+            --header-height: 60px;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            position: fixed;
+            background: #2c3e50;
+            color: white;
+            transition: all 0.3s;
+        }
+        
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 20px;
+        }
+        
+        .navbar {
+            height: var(--header-height);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #3498db;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .table-responsive {
+            overflow-x: auto;
+        }
+        
+        .pagination .page-item.active .page-link {
+            background-color: #2c3e50;
+            border-color: #2c3e50;
+        }
+        
+        .pagination .page-link {
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar p-3">
+        <div class="text-center mb-4">
+            <h4>Sistema de Asistencias</h4>
+        </div>
+        <ul class="nav flex-column" id="sidebarMenu">
+            <li class="nav-item">
+                <a class="nav-link text-white" href="dashboard.html">
+                    <i class="bi bi-speedometer2 me-2"></i>Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-white active" href="admin-users.html">
+                    <i class="bi bi-people me-2"></i>Usuarios
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-white" href="admin-grados.html">
+                    <i class="bi bi-book me-2"></i>Grados
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-white" href="docente-asistencia.html">
+                    <i class="bi bi-clipboard-data me-2"></i>Reportes
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-white" href="asignacion-alumno.html">
+                    <i class="bi bi-clipboard-data me-2"></i>asignacion de alumnos
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-white" href="asistencia.html">
+                    <i class="bi bi-clipboard-data me-2"></i>asistencia
+                </a>
+            </li>
+        </ul>
+    </div>
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Navbar -->
+        <nav class="navbar navbar-expand navbar-light bg-white">
+            <div class="container-fluid">
+                <div class="ms-auto d-flex align-items-center">
+                    <div class="user-avatar me-2" id="userAvatar">AD</div>
+                    <div>
+                        <span class="fw-bold" id="username">Admin</span>
+                        <div class="text-muted small" id="userRole">Administrador</div>
+                    </div>
+                    <button class="btn btn-link text-dark ms-3" id="logoutBtn">
+                        <i class="bi bi-box-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- User Management Content -->
+        <div class="container-fluid mt-4">
+            <!-- Sección de Grados -->
+            <div class="card mt-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Gestión de Grados</h5>
+                    <button id="addGradeBtn" class="btn btn-primary btn-sm">
+                        <i class="bi bi-plus-circle"></i> Agregar Grado
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table id="gradesTable" class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Docente Asignado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <nav>
+                        <ul id="gradesPagination" class="pagination justify-content-center"></ul>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Modal para Grados -->
+            <div class="modal fade" id="gradeModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="gradeModalTitle">Agregar Grado</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="gradeForm">
+                                <input type="hidden" id="gradeId">
+                                <div class="mb-3">
+                                    <label class="form-label">Nombre del Grado</label>
+                                    <input type="text" id="gradeName" class="form-control" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Docente</label>
+                                    <select id="gradeTeacher" class="form-select">
+                                        <option value="">Sin asignar</option>
+                                        <!-- Docentes se cargarán dinámicamente -->
+                                    </select>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="button" id="saveGradeBtn" class="btn btn-primary">Guardar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal para agregar/editar usuario -->
+        <div class="modal fade" id="userModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalTitle">Agregar Usuario</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="userForm">
+                            <input type="hidden" id="userId">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Nombre</label>
+                                <input type="text" class="form-control" id="name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Correo</label>
+                                <input type="email" class="form-control" id="email" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Contraseña</label>
+                                <input type="password" class="form-control" id="password">
+                            </div>
+                            <div class="mb-3">
+                                <label for="role" class="form-label">Rol</label>
+                                <select class="form-select" id="role" required>
+                                    <option value="">Seleccionar rol</option>
+                                    <option value="admin">Administrador</option>
+                                    <option value="docente">Docente</option>
+                                    <option value="alumno">Alumno</option>
+                                </select>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary" id="saveUserBtn">Guardar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    // Variables globales para grados
+    let allGrades = [];
+    let allTeachers = [];
+    let currentPage = 1;
+    const itemsPerPage = 10;
+
+    // Inicialización cuando el DOM esté listo
+    document.addEventListener('DOMContentLoaded', async () => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = 'login.html';
+            return;
+        }
+
+        try {
+            // Decodificar token para obtener información del usuario
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            
+            // Mostrar información del usuario en el navbar
+            document.getElementById('username').textContent = payload.nombre || 'Usuario';
+            document.getElementById('userRole').textContent = payload.rol || 'Administrador';
+            document.getElementById('userAvatar').textContent = payload.nombre?.charAt(0).toUpperCase() || 'A';
+
+            // Cargar datos iniciales
+            await loadTeachers();
+            await loadGrades();
+
+        } catch (error) {
+            console.error("Error al inicializar:", error);
+            window.location.href = 'login.html';
+            return;
+        }
+
+        // Configurar event listeners
+        document.getElementById('logoutBtn').addEventListener('click', logout);
+        document.getElementById('addGradeBtn').addEventListener('click', () => showAddGradeModal());
+        document.getElementById('saveGradeBtn').addEventListener('click', saveGrade);
+    });
+
+    // Función para cargar la lista de docentes
+    async function loadTeachers() {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('http://localhost:5000/api/admin/usuarios', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (!response.ok) throw new Error('Error al cargar docentes');
+            
+            const data = await response.json();
+            allTeachers = data.filter(user => user.rol === 'docente');
+            updateTeacherDropdown();
+            
+        } catch (error) {
+            console.error("Error al cargar docentes:", error);
+            alert('Error al cargar la lista de docentes');
+        }
+    }
+
+    // Actualizar el dropdown de docentes
+    function updateTeacherDropdown() {
+        const dropdown = document.getElementById('gradeTeacher');
+        dropdown.innerHTML = '<option value="">Sin asignar</option>';
+        
+        allTeachers.forEach(teacher => {
+            dropdown.innerHTML += `
+                <option value="${teacher.id}">${teacher.nombre}</option>
+            `;
+        });
+    }
+
+    // Función para cargar los grados
+    async function loadGrades() {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('http://localhost:5000/api/admin/grados', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (!response.ok) throw new Error('Error al cargar grados');
+            
+            allGrades = await response.json();
+            renderGrades();
+            
+        } catch (error) {
+            console.error("Error al cargar grados:", error);
+            alert('Error al cargar la lista de grados');
+        }
+    }
+
+    // Mostrar el modal para agregar/editar grado
+    function showAddGradeModal(gradeId = null) {
+        const form = document.getElementById('gradeForm');
+        form.reset();
+        
+        document.getElementById('gradeModalTitle').textContent = gradeId ? 'Editar Grado' : 'Agregar Grado';
+        document.getElementById('gradeId').value = gradeId || '';
+        
+        if (gradeId) {
+            const grade = allGrades.find(g => g.id == gradeId);
+            if (grade) {
+                document.getElementById('gradeName').value = grade.nombre;
+                document.getElementById('gradeTeacher').value = grade.docente_id ? String(grade.docente_id) : '';
+
+            }
+        }
+        
+        new bootstrap.Modal(document.getElementById('gradeModal')).show();
+    }
+
+    // Guardar grado (crear o actualizar)
+    async function saveGrade() {
+    const gradeId = document.getElementById('gradeId').value;
+    const nombre = document.getElementById('gradeName').value.trim();
+    const docenteValue = document.getElementById('gradeTeacher').value;
+    const docenteId = docenteValue === "" ? null : Number(docenteValue);
+
+    if (!nombre) {
+        alert('El nombre del grado es obligatorio');
+        return;
+    }
+
+    console.log({ nombre, docente_id: docenteId }); // Agrega esta línea para depurar
+
+    try {
+        const token = localStorage.getItem('token');
+        const method = gradeId ? 'PUT' : 'POST';
+        const url = gradeId 
+            ? `http://localhost:5000/api/admin/grados/${gradeId}`
+            : 'http://localhost:5000/api/admin/grados';
+        console.log({ nombre, docente_id: docenteId });
+
+        const response = await fetch(url, {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ nombre, docente_id: docenteId })  // Aquí es donde se envía
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Error al guardar grado');
+        }
+        
+        await loadGrades();
+        bootstrap.Modal.getInstance(document.getElementById('gradeModal')).hide();
+        alert(`Grado ${gradeId ? 'actualizado' : 'creado'} correctamente`);
+        
+    } catch (error) {
+        console.error("Error al guardar grado:", error);
+        alert(`Error: ${error.message}`);
+    }
+}
+
+
+    // Renderizar la tabla de grados
+    function renderGrades() {
+        const tbody = document.querySelector('#gradesTable tbody');
+        tbody.innerHTML = '';
+        
+        // Paginación
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const paginatedGrades = allGrades.slice(startIndex, startIndex + itemsPerPage);
+        
+        if (paginatedGrades.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="4" class="text-center">No se encontraron grados</td>
+                </tr>
+            `;
+            return;
+        }
+
+        paginatedGrades.forEach(grade => {
+            const teacher = grade.docente_id 
+                ? allTeachers.find(t => t.id == grade.docente_id)?.nombre || 'No asignado'
+                : 'No asignado';
+            
+            tbody.innerHTML += `
+                <tr>
+                    <td>${grade.id}</td>
+                    <td>${grade.nombre}</td>
+                    <td>${teacher}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary me-2" 
+                                onclick="showAddGradeModal(${grade.id})">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" 
+                                onclick="confirmDeleteGrade(${grade.id})">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        renderGradesPagination();
+    }
+
+    // Renderizar la paginación de grados
+    function renderGradesPagination() {
+        const pagination = document.getElementById('gradesPagination');
+        pagination.innerHTML = '';
+        
+        const totalPages = Math.ceil(allGrades.length / itemsPerPage);
+        
+        if (totalPages <= 1) return;
+
+        // Botón Anterior
+        pagination.innerHTML += `
+            <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="changeGradePage(${currentPage - 1})">Anterior</a>
+            </li>
+        `;
+
+        // Números de página
+        for (let i = 1; i <= totalPages; i++) {
+            pagination.innerHTML += `
+                <li class="page-item ${i === currentPage ? 'active' : ''}">
+                    <a class="page-link" href="#" onclick="changeGradePage(${i})">${i}</a>
+                </li>
+            `;
+        }
+
+        // Botón Siguiente
+        pagination.innerHTML += `
+            <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="changeGradePage(${currentPage + 1})">Siguiente</a>
+            </li>
+        `;
+    }
+
+    // Cambiar página de grados
+    window.changeGradePage = function(page) {
+        currentPage = page;
+        renderGrades();
+        window.scrollTo(0, 0);
+    };
+
+    // Confirmar eliminación de grado
+    window.confirmDeleteGrade = function(gradeId) {
+        if (confirm('¿Está seguro que desea eliminar este grado? Esta acción no se puede deshacer.')) {
+            deleteGrade(gradeId);
+        }
+    };
+
+    // Eliminar grado
+    async function deleteGrade(gradeId) {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`http://localhost:5000/api/admin/grados/${gradeId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (!response.ok) throw new Error('Error al eliminar grado');
+            
+            await loadGrades();
+            alert('Grado eliminado correctamente');
+            
+        } catch (error) {
+            console.error("Error al eliminar grado:", error);
+            alert(`Error: ${error.message}`);
+        }
+    }
+    
+
+    // Función para cerrar sesión
+    function logout() {
+        localStorage.removeItem('token');
+        window.location.href = 'login.html';
+    }
+</script>
+</body>
+</html>

@@ -1,13 +1,12 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Registro de Asistencias</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" />
-  <style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Asistencias</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
     :root {
       --sidebar-width: 250px;
       --header-height: 60px;
@@ -23,6 +22,7 @@
       position: fixed;
       background: #2c3e50;
       color: white;
+      transition: all 0.3s;
     }
 
     .main-content {
@@ -39,6 +39,11 @@
       border: none;
       border-radius: 10px;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
     }
 
     .user-avatar {
@@ -54,16 +59,14 @@
     }
   </style>
 </head>
-
 <body>
-
-  <!-- Sidebar -->
-  <div class="sidebar p-3">
-    <div class="text-center mb-4">
-      <h4>Sistema Escolar</h4>
-    </div>
-    <ul class="nav flex-column">
-      <li class="nav-item">
+    <!-- Sidebar -->
+    <div class="sidebar p-3">
+        <div class="text-center mb-4">
+            <h4>Sistema de Asistencias</h4>
+        </div>
+        <ul class="nav flex-column" id="sidebarMenu">
+            <li class="nav-item">
                 <a class="nav-link text-white" href="dashboard.html">
                     <i class="bi bi-speedometer2 me-2"></i>Dashboard
                 </a>
@@ -74,246 +77,480 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link text-white" href="grados-admin.html">
+                <a class="nav-link text-white" href="admin-grados.html">
                     <i class="bi bi-book me-2"></i>Grados
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link text-white" href="asignacion-alumnos.html">
-                    <i class="bi bi-person-plus me-2"></i>Asignar Alumnos
+                <a class="nav-link text-white" href="docente-asistencia.html">
+                    <i class="bi bi-clipboard-data me-2"></i>Reportes
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link text-white" href="docente-asistencia.html">
-                    <i class="bi bi-clipboard-data me-2"></i>Asistencia
+                <a class="nav-link text-white" href="asignacion-alumno.html">
+                    <i class="bi bi-clipboard-data me-2"></i>asignacion de alumnos
                 </a>
             </li>
-    </ul>
-  </div>
-
-  <!-- Main Content -->
-  <div class="main-content">
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand navbar-light bg-white">
-      <div class="container-fluid">
-        <div class="ms-auto d-flex align-items-center">
-          <div class="user-avatar me-2" id="userAvatar">AD</div>
-          <span class="fw-bold" id="username">Admin</span>
-        </div>
-      </div>
-    </nav>
-
-    <div class="container-fluid mt-4">
-      <div class="card mb-4">
-        <div class="card-header bg-white">
-          <h5 class="mb-0">Registrar Asistencia</h5>
-        </div>
-        <div class="card-body">
-          <div class="row g-3">
-            <div class="col-md-4">
-              <label class="form-label">Alumno</label>
-              <select id="alumnoSelect" class="form-select">
-                <option value="">Cargando alumnos...</option>
-              </select>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">Fecha</label>
-              <input type="date" id="fechaInput" class="form-control" />
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">Estado</label>
-              <select id="estadoSelect" class="form-select">
-                <option value="presente">presente</option>
-                <option value="ausente">ausente</option>
-                <option value="justificado">justificado</option>
-              </select>
-            </div>
-          </div>
-          <div class="text-end mt-3">
-            <button id="btnGuardar" class="btn btn-primary"><i class="bi bi-save me-2"></i>Guardar</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="card mb-4">
-        <div class="card-header bg-white">
-          <h5 class="mb-0">Filtrar Asistencias</h5>
-        </div>
-        <div class="card-body row g-3">
-          <div class="col-md-4">
-            <label class="form-label">Grado</label>
-            <select id="filtroGrado" class="form-select">
-              <option value="">Todos los grados</option>
-            </select>
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">Fecha</label>
-            <input type="date" id="filtroFecha" class="form-control" />
-          </div>
-          <div class="col-md-4 d-grid">
-            <button id="btnFiltrar" class="btn btn-secondary mt-4">Aplicar Filtros</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header bg-white">
-          <h5 class="mb-0">Asistencias Registradas</h5>
-        </div>
-        <div class="card-body table-responsive">
-          <table class="table table-bordered" id="tablaAsistencias">
-            <thead>
-              <tr>
-                <th>Alumno</th>
-                <th>Grado</th>
-                <th>Fecha</th>
-                <th>Estado</th>
-                <th>Acción</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td colspan="5" class="text-center">Cargando...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+            <li class="nav-item">
+                <a class="nav-link text-white" href="asistencia.html">
+                    <i class="bi bi-clipboard-data me-2"></i>asistencia
+                </a>
+            </li>
+        </ul>
     </div>
-  </div>
 
-  <script>
-    const API = 'http://localhost:5000/api';
-    const token = localStorage.getItem('token');
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Navbar -->
+        <nav class="navbar navbar-expand navbar-light bg-white">
+            <div class="container-fluid">
+                <div class="ms-auto d-flex align-items-center">
+                    <div class="user-avatar me-2" id="userAvatar">AD</div>
+                    <div>
+                        <span class="fw-bold" id="username">Admin</span>
+                        <div class="text-muted small" id="userRole">Administrador</div>
+                    </div>
+                    <button class="btn btn-link text-dark ms-3" id="logoutBtn">
+                        <i class="bi bi-box-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </nav>
 
-    document.addEventListener('DOMContentLoaded', () => {
-      cargarAlumnos();
-      cargarGrados();
-      cargarAsistencias();
+        <!-- Asistencias Content -->
+        <div class="container-fluid mt-4">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h4 class="mb-0">Gestión de Asistencias</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label">Seleccione Grado:</label>
+                            <select class="form-select" id="gradoSelect">
+                                <option value="">Cargando grados...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Fecha:</label>
+                            <input type="date" class="form-control" id="fechaInput">
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button class="btn btn-primary w-100" id="buscarBtn">
+                                <i class="bi bi-search me-2"></i>Buscar
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="asistenciaTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="40%">Alumno</th>
+                                    <th width="20%">Estado</th>
+                                    <th width="20%">Fecha</th>
+                                    <th width="20%">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="4" class="text-center">Seleccione un grado y fecha para cargar las asistencias</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <nav>
+                        <ul id="asistenciasPagination" class="pagination justify-content-center mt-3"></ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
 
-      document.getElementById('btnGuardar').addEventListener('click', guardarAsistencia);
-      document.getElementById('btnFiltrar').addEventListener('click', cargarAsistencias);
-    });
+        <!-- Modal para editar asistencia -->
+        <div class="modal fade" id="asistenciaModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Editar Asistencia</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="asistenciaForm">
+                            <input type="hidden" id="asistenciaId">
+                            <div class="mb-3">
+                                <label class="form-label">Alumno</label>
+                                <input type="text" id="alumnoNombre" class="form-control" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Fecha</label>
+                                <input type="date" id="asistenciaFecha" class="form-control" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Estado</label>
+                                <select class="form-select" id="asistenciaEstado">
+                                    <option value="presente">Presente</option>
+                                    <option value="ausente">Ausente</option>
+                                    <option value="tardanza">Tardanza</option>
+                                    <option value="justificado">Justificado</option>
+                                </select>
+                            </div>
+                            <div class="mb-3" id="justificacionContainer" style="display: none;">
+                                <label class="form-label">Justificación</label>
+                                <textarea class="form-control" id="asistenciaJustificacion" rows="3"></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary" id="guardarAsistenciaBtn">Guardar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    async function cargarAlumnos() {
-      try {
-        const res = await fetch(`${API}/alumnos`, {
-          headers: { Authorization: `Bearer ${token}` }
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Variables globales
+        let allGrades = [];
+        let allStudents = [];
+        let currentAsistencias = [];
+        let currentPage = 1;
+        const itemsPerPage = 10;
+
+        // Inicialización cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', async () => {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            try {
+                // Decodificar token para obtener información del usuario
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                
+                // Mostrar información del usuario en el navbar
+                document.getElementById('username').textContent = payload.nombre || 'Usuario';
+                document.getElementById('userRole').textContent = payload.rol || 'Administrador';
+                document.getElementById('userAvatar').textContent = payload.nombre?.charAt(0).toUpperCase() || 'A';
+
+                // Establecer fecha actual por defecto
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('fechaInput').value = today;
+                
+                // Cargar datos iniciales
+                await loadGrades();
+
+            } catch (error) {
+                console.error("Error al inicializar:", error);
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Configurar event listeners
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+            document.getElementById('buscarBtn').addEventListener('click', loadAsistencias);
+            document.getElementById('asistenciaEstado').addEventListener('change', toggleJustificacion);
+            document.getElementById('guardarAsistenciaBtn').addEventListener('click', saveAsistencia);
         });
-        const alumnos = await res.json();
-        const select = document.getElementById('alumnoSelect');
-        select.innerHTML = '<option value="">Seleccione un alumno</option>';
-        alumnos.forEach(a => {
-          select.innerHTML += `<option value="${a.id}">${a.nombre}</option>`;
-        });
-      } catch (err) {
-        alert('Error al cargar alumnos');
-      }
-    }
 
-    async function cargarGrados() {
-      try {
-        const res = await fetch(`${API}/admin/grados`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const grados = await res.json();
-        const filtro = document.getElementById('filtroGrado');
-        filtro.innerHTML = '<option value="">Todos los grados</option>';
-        grados.forEach(g => {
-          filtro.innerHTML += `<option value="${g.id}">${g.nombre}</option>`;
-        });
-      } catch (err) {
-        alert('Error al cargar grados');
-      }
-    }
-
-    async function guardarAsistencia() {
-      const alumnoId = document.getElementById('alumnoSelect').value;
-      const fecha = document.getElementById('fechaInput').value;
-      const estado = document.getElementById('estadoSelect').value;
-
-      if (!alumnoId || !fecha || !estado) return alert("Todos los campos son obligatorios");
-
-      try {
-        const res = await fetch(`${API}/admin/asistencias`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`
-          },
-          body: JSON.stringify({ alumno_id: alumnoId, fecha, estado })
-        });
-
-        if (!res.ok) throw new Error('No se pudo guardar asistencia');
-        alert('Asistencia registrada');
-        cargarAsistencias();
-      } catch (err) {
-        alert('Error al guardar asistencia');
-      }
-    }
-
-    async function cargarAsistencias() {
-      const gradoId = document.getElementById('filtroGrado').value;
-      const fecha = document.getElementById('filtroFecha').value;
-
-      let url = `${API}/admin/asistencias`;
-      const params = [];
-
-      if (gradoId) params.push(`grado_id=${gradoId}`);
-      if (fecha) params.push(`fecha=${fecha}`);
-      if (params.length) url += '?' + params.join('&');
-
-      try {
-        const res = await fetch(url, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        const asistencias = await res.json();
-        const tbody = document.querySelector('#tablaAsistencias tbody');
-        tbody.innerHTML = '';
-
-        if (asistencias.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="5" class="text-center">Sin registros</td></tr>';
-          return;
+        // Función para cargar la lista de grados
+        async function loadGrades() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('http://localhost:5000/api/admin/grados', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!response.ok) throw new Error('Error al cargar grados');
+                
+                allGrades = await response.json();
+                updateGradeDropdown();
+                
+            } catch (error) {
+                console.error("Error al cargar grados:", error);
+                alert('Error al cargar la lista de grados');
+            }
         }
 
-        asistencias.forEach(a => {
-          tbody.innerHTML += `
-        <tr>
-          <td>${a.alumno_nombre}</td>
-          <td>${a.grado_nombre}</td>
-          <td>${a.fecha}</td>
-          <td>${a.estado}</td>
-          <td>
-            <button class="btn btn-sm btn-danger" onclick="eliminarAsistencia(${a.id})">
-              <i class="bi bi-trash"></i>
-            </button>
-          </td>
-        </tr>`;
-        });
-      } catch (err) {
-        alert('Error al cargar asistencias');
-      }
-    }
+        // Actualizar el dropdown de grados
+        function updateGradeDropdown() {
+            const dropdown = document.getElementById('gradoSelect');
+            dropdown.innerHTML = '<option value="">Seleccione un grado</option>';
+            
+            allGrades.forEach(grade => {
+                dropdown.innerHTML += `
+                    <option value="${grade.id}">${grade.nombre}</option>
+                `;
+            });
+        }
 
-    async function eliminarAsistencia(id) {
-      if (!confirm('¿Eliminar esta asistencia?')) return;
+        // Función para cargar las asistencias
+        async function loadAsistencias() {
+            const gradoId = document.getElementById('gradoSelect').value;
+            const fecha = document.getElementById('fechaInput').value;
+            
+            if (!gradoId || !fecha) {
+                alert('Por favor seleccione un grado y una fecha');
+                return;
+            }
+            
+            try {
+                const token = localStorage.getItem('token');
+                
+                // Mostrar carga
+                document.querySelector('#asistenciaTable tbody').innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center">Cargando asistencias...</td>
+                    </tr>
+                `;
+                
+                // Cargar alumnos del grado
+                const alumnosResponse = await fetch(`http://localhost:5000/api/admin/grados/${gradoId}/alumnos`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!alumnosResponse.ok) throw new Error('Error al cargar alumnos');
+                
+                allStudents = await alumnosResponse.json();
+                
+                // Cargar asistencias existentes
+                const asistenciasResponse = await fetch(`http://localhost:5000/api/asistencias?gradoId=${gradoId}&fecha=${fecha}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!asistenciasResponse.ok) throw new Error('Error al cargar asistencias');
+                
+                const asistenciasData = await asistenciasResponse.json();
+                currentAsistencias = asistenciasData.asistencias || [];
+                
+                renderAsistencias();
+                
+            } catch (error) {
+                console.error("Error al cargar asistencias:", error);
+                document.querySelector('#asistenciaTable tbody').innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center text-danger">Error al cargar asistencias</td>
+                    </tr>
+                `;
+            }
+        }
 
-      try {
-        const res = await fetch(`${API}/admin/asistencias/${id}`, {
-          method: 'DELETE',
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        // Renderizar la tabla de asistencias
+        function renderAsistencias() {
+            const tbody = document.querySelector('#asistenciaTable tbody');
+            tbody.innerHTML = '';
+            
+            // Paginación
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const paginatedStudents = allStudents.slice(startIndex, startIndex + itemsPerPage);
+            
+            if (paginatedStudents.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center">No hay alumnos en este grado</td>
+                    </tr>
+                `;
+                renderAsistenciasPagination();
+                return;
+            }
 
-        if (!res.ok) throw new Error();
-        alert('Asistencia eliminada');
-        cargarAsistencias();
-      } catch (err) {
-        alert('Error al eliminar asistencia');
-      }
-    }
-  </script>
+            paginatedStudents.forEach(student => {
+                // Buscar asistencia existente para este alumno
+                const asistencia = currentAsistencias.find(a => a.alumno_id == student.id);
+                const estado = asistencia?.estado || 'presente';
+                const justificacion = asistencia?.justificacion || '';
+                
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${student.nombre} ${student.apellido}</td>
+                        <td>
+                            <span class="badge ${getEstadoBadgeClass(estado)} attendance-badge" 
+                                  onclick="editAsistencia(${student.id}, '${student.nombre} ${student.apellido}', '${estado}', '${justificacion}')">
+                                ${getEstadoText(estado)}
+                            </span>
+                        </td>
+                        <td>${document.getElementById('fechaInput').value}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" 
+                                    onclick="editAsistencia(${student.id}, '${student.nombre} ${student.apellido}', '${estado}', '${justificacion}')">
+                                <i class="bi bi-pencil"></i> Editar
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            renderAsistenciasPagination();
+        }
 
+        // Renderizar la paginación de asistencias
+        function renderAsistenciasPagination() {
+            const pagination = document.getElementById('asistenciasPagination');
+            pagination.innerHTML = '';
+            
+            const totalPages = Math.ceil(allStudents.length / itemsPerPage);
+            
+            if (totalPages <= 1) return;
+
+            // Botón Anterior
+            pagination.innerHTML += `
+                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="changeAsistenciasPage(${currentPage - 1})">Anterior</a>
+                </li>
+            `;
+
+            // Números de página
+            for (let i = 1; i <= totalPages; i++) {
+                pagination.innerHTML += `
+                    <li class="page-item ${i === currentPage ? 'active' : ''}">
+                        <a class="page-link" href="#" onclick="changeAsistenciasPage(${i})">${i}</a>
+                    </li>
+                `;
+            }
+
+            // Botón Siguiente
+            pagination.innerHTML += `
+                <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="changeAsistenciasPage(${currentPage + 1})">Siguiente</a>
+                </li>
+            `;
+        }
+
+        // Cambiar página de asistencias
+        window.changeAsistenciasPage = function(page) {
+            currentPage = page;
+            renderAsistencias();
+            window.scrollTo(0, 0);
+        };
+
+        // Mostrar modal para editar asistencia
+        window.editAsistencia = function(alumnoId, alumnoNombre, estado, justificacion) {
+            document.getElementById('asistenciaId').value = alumnoId;
+            document.getElementById('alumnoNombre').value = alumnoNombre;
+            document.getElementById('asistenciaFecha').value = document.getElementById('fechaInput').value;
+            document.getElementById('asistenciaEstado').value = estado;
+            document.getElementById('asistenciaJustificacion').value = justificacion;
+            
+            toggleJustificacion();
+            
+            new bootstrap.Modal(document.getElementById('asistenciaModal')).show();
+        };
+
+        // Mostrar/ocultar campo de justificación según el estado
+        function toggleJustificacion() {
+            const estado = document.getElementById('asistenciaEstado').value;
+            const container = document.getElementById('justificacionContainer');
+            
+            if (estado === 'justificado') {
+                container.style.display = 'block';
+            } else {
+                container.style.display = 'none';
+            }
+        }
+
+        // Guardar asistencia
+        async function saveAsistencia() {
+            const alumnoId = document.getElementById('asistenciaId').value;
+            const estado = document.getElementById('asistenciaEstado').value;
+            const justificacion = document.getElementById('asistenciaJustificacion').value;
+            const fecha = document.getElementById('asistenciaFecha').value;
+            const gradoId = document.getElementById('gradoSelect').value;
+            
+            if (estado === 'justificado' && !justificacion.trim()) {
+                alert('Por favor ingrese una justificación');
+                return;
+            }
+            
+            try {
+                const token = localStorage.getItem('token');
+                const btn = document.getElementById('guardarAsistenciaBtn');
+                
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Guardando...';
+                
+                // Buscar si ya existe una asistencia para este alumno en esta fecha
+                const asistenciaExistente = currentAsistencias.find(a => a.alumno_id == alumnoId);
+                
+                let response;
+                if (asistenciaExistente) {
+                    // Actualizar asistencia existente
+                    response = await fetch(`http://localhost:5000/api/asistencias/${asistenciaExistente.id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            estado,
+                            justificacion: estado === 'justificado' ? justificacion : null
+                        })
+                    });
+                } else {
+                    // Crear nueva asistencia
+                    response = await fetch('http://localhost:5000/api/asistencias', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            alumno_id: alumnoId,
+                            grado_id: gradoId,
+                            fecha,
+                            estado,
+                            justificacion: estado === 'justificado' ? justificacion : null
+                        })
+                    });
+                }
+                
+                if (!response.ok) throw new Error('Error al guardar asistencia');
+                
+                // Recargar asistencias
+                await loadAsistencias();
+                
+                // Cerrar modal
+                bootstrap.Modal.getInstance(document.getElementById('asistenciaModal')).hide();
+                
+            } catch (error) {
+                console.error("Error al guardar asistencia:", error);
+                alert('Error al guardar la asistencia');
+            } finally {
+                const btn = document.getElementById('guardarAsistenciaBtn');
+                btn.disabled = false;
+                btn.innerHTML = 'Guardar';
+            }
+        }
+
+        // Obtener clase CSS para el badge según el estado
+        function getEstadoBadgeClass(estado) {
+            switch(estado) {
+                case 'presente': return 'bg-success status-present';
+                case 'ausente': return 'bg-danger status-absent';
+                case 'tardanza': return 'bg-warning status-late';
+                case 'justificado': return 'bg-info status-justified';
+                default: return 'bg-secondary';
+            }
+        }
+
+        // Obtener texto legible para el estado
+        function getEstadoText(estado) {
+            switch(estado) {
+                case 'presente': return 'Presente';
+                case 'ausente': return 'Ausente';
+                case 'tardanza': return 'Tardanza';
+                case 'justificado': return 'Justificado';
+                default: return estado;
+            }
+        }
+
+        // Función para cerrar sesión
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = 'login.html';
+        }
+    </script>
 </body>
-
 </html>

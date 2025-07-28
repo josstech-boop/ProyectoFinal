@@ -1,7 +1,6 @@
+// backend/middleware/checkRole.js
 const checkRole = (roles) => (req, res, next) => {
-  const userRole = req.user.rol.toLowerCase();
-  const allowedRoles = roles.map(r => r.toLowerCase());
-  if (!allowedRoles.includes(userRole)) {
+  if (!roles.includes(req.user.rol)) {
     return res.status(403).json({ error: 'Acceso prohibido' });
   }
   next();

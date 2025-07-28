@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,11 +11,11 @@
             --sidebar-width: 250px;
             --header-height: 60px;
         }
-
+        
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-
+        
         .sidebar {
             width: var(--sidebar-width);
             height: 100vh;
@@ -25,28 +24,28 @@
             color: white;
             transition: all 0.3s;
         }
-
+        
         .main-content {
             margin-left: var(--sidebar-width);
             padding: 20px;
         }
-
+        
         .navbar {
             height: var(--header-height);
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
-
+        
         .card {
             border: none;
             border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             transition: transform 0.3s;
         }
-
+        
         .card:hover {
             transform: translateY(-5px);
         }
-
+        
         .user-avatar {
             width: 40px;
             height: 40px;
@@ -60,7 +59,6 @@
         }
     </style>
 </head>
-
 <body>
     <!-- Sidebar -->
     <div class="sidebar p-3">
@@ -79,18 +77,23 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link text-white" href="grados-admin.html">
+                <a class="nav-link text-white" href="admin-grados.html">
                     <i class="bi bi-book me-2"></i>Grados
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link text-white" href="asignacion-alumnos.html">
-                    <i class="bi bi-person-plus me-2"></i>Asignar Alumnos
+                <a class="nav-link text-white" href="docente-asistencia.html">
+                    <i class="bi bi-clipboard-data me-2"></i>Reportes
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link text-white" href="docente-asistencia.html">
-                    <i class="bi bi-clipboard-data me-2"></i>Asistencia
+                <a class="nav-link text-white" href="asignacion-alumno.html">
+                    <i class="bi bi-clipboard-data me-2"></i>asignacion de alumnos
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-white" href="asistencia.html">
+                    <i class="bi bi-clipboard-data me-2"></i>asistencia
                 </a>
             </li>
         </ul>
@@ -166,12 +169,12 @@
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        
         // Variables globales
         let currentPage = 1;
         const itemsPerPage = 10;
@@ -261,9 +264,9 @@
 
                 // Actualizar contadores del dashboard
                 document.getElementById('totalUsers').textContent = users.length;
-                document.getElementById('totalTeachers').textContent =
+                document.getElementById('totalTeachers').textContent = 
                     users.filter(u => u.rol === 'docente').length;
-                document.getElementById('totalStudents').textContent =
+                document.getElementById('totalStudents').textContent = 
                     users.filter(u => u.rol === 'alumno').length;
 
             } catch (error) {
@@ -296,8 +299,8 @@
                     <td>${user.nombre || 'Sin nombre'}</td>
                     <td>${user.correo || 'Sin correo'}</td>
                     <td>
-                        <span class="badge bg-${user.rol === 'admin' ? 'danger' :
-                        user.rol === 'docente' ? 'primary' : 'success'}">
+                        <span class="badge bg-${user.rol === 'admin' ? 'danger' : 
+                             user.rol === 'docente' ? 'primary' : 'success'}">
                             ${user.rol || 'Sin rol'}
                         </span>
                     </td>
@@ -375,10 +378,10 @@
             const roleFilter = document.getElementById('roleFilter')?.value;
 
             filteredUsers = allUsers.filter(user => {
-                const matchesSearch = user.nombre?.toLowerCase().includes(searchTerm) ||
-                    user.correo?.toLowerCase().includes(searchTerm);
+                const matchesSearch = user.nombre?.toLowerCase().includes(searchTerm) || 
+                                     user.correo?.toLowerCase().includes(searchTerm);
                 const matchesRole = roleFilter ? user.rol === roleFilter : true;
-
+                
                 return matchesSearch && matchesRole;
             });
 
@@ -430,12 +433,13 @@
             `;
         }
 
-        window.changePage = function (page) {
+        window.changePage = function(page) {
             currentPage = page;
             renderUsers();
             window.scrollTo(0, 0);
         };
     </script>
-</body>
 
+
+</body>
 </html>

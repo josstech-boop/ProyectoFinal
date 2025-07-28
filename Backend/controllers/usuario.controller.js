@@ -18,10 +18,24 @@ const getUsers = async (req, res) => {
         });
     }
 };
+// Obtener solo usuarios con rol 'alumno'
+const getAlumnos = async (req, res) => {
+  try {
+    const { rows } = await db.query(
+      'SELECT id, nombre FROM usuarios WHERE rol = $1', ['alumno']
+    );
+    res.json(rows);
+  } catch (error) {
+    console.error('Error en getAlumnos:', error);
+    res.status(500).json({ error: 'Error al obtener alumnos' });
+  }
+};
+
 
 // Crear un nuevo usuario (solo admin)
 const createUser = async (req, res) => {
   const { nombre, correo, password, rol } = req.body;
+   console.log('Datos recibidos:', req.body); // 👈 debug
 
   // Validar roles permitidos
   const rolesPermitidos = ['admin', 'docente', 'alumno'];
@@ -84,5 +98,6 @@ module.exports = {
   getUsers,
   createUser,
   updateUser,
-  deleteUser
+  deleteUser,
+  getAlumnos
 };

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Asistencia del Alumno</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" />
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f8f9fa;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 900px;
+      margin-top: 40px;
+    }
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #3498db;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 1.2rem;
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="d-flex align-items-center mb-4">
+      <div class="user-avatar" id="userAvatar">A</div>
+      <div>
+        <h4 id="username">Alumno</h4>
+        <small id="userRole">Rol</small>
+      </div>
+      <button class="btn btn-outline-danger ms-auto" id="logoutBtn">Cerrar sesión</button>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5>Filtrar Asistencia</h5>
+      </div>
+      <div class="card-body">
+        <form id="filterForm" class="row g-3">
+          <div class="col-md-5">
+            <label for="filterDate" class="form-label">Fecha</label>
+            <input type="date" id="filterDate" class="form-control" />
+          </div>
+          <div class="col-md-5">
+            <label for="filterEstado" class="form-label">Estado</label>
+            <select id="filterEstado" class="form-select">
+              <option value="">Todos</option>
+              <option value="Presente">Presente</option>
+              <option value="Ausente">Ausente</option>
+              <option value="Justificado">Justificado</option>
+            </select>
+          </div>
+          <div class="col-md-2 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary w-100">Aplicar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5>Historial de Asistencia</h5>
+      </div>
+      <div class="card-body table-responsive">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody id="asistenciaTabla">
+            <tr><td colspan="2" class="text-center">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h5>Estadísticas Mensuales</h5>
+      </div>
+      <div class="card-body">
+        <ul class="list-group" id="estadisticasList">
+          <li class="list-group-item d-flex justify-content-between">Presente: <span id="porcentajePresente">0%</span></li>
+          <li class="list-group-item d-flex justify-content-between">Ausente: <span id="porcentajeAusente">0%</span></li>
+          <li class="list-group-item d-flex justify-content-between">Justificado: <span id="porcentajeJustificado">0%</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let asistencias = [];
+    let alumnoId = null;
+
+    // Cerrar sesión
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      localStorage.removeItem('token');
+      window.location.href = 'login.html';
+    });
+
+    // Al cargar la página
+    document.addEventListener('DOMContentLoaded', async () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('No has iniciado sesión');
+        return window.location.href = 'login.html';
+      }
+
+      try {
+        // Decodificar token para obtener datos del usuario
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        alumnoId = payload.id;
+        document.getElementById('username').textContent = payload.nombre;
+        document.getElementById('userRole').textContent = payload.rol;
+        document.getElementById('userAvatar').textContent = payload.nombre.charAt(0).toUpperCase();
+
+        // Cargar asistencias
+        await cargarAsistencias();
+
+      } catch (error) {
+        console.error('Token inválido o error:', error);
+        localStorage.removeItem('token');
+        window.location.href = 'login.html';
+      }
+    });
+
+    // Cargar todas las asistencias del alumno
+    async function cargarAsistencias() {
+  try {
+    const token = localStorage.getItem('token');
+    // Obtener el id del alumno desde el token
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const alumnoId = payload.id;
+
+    const response = await fetch(`http://localhost:5000/api/alumno-asistencia/asistencias/${alumnoId}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!response.ok) throw new Error('Error al cargar la asistencia');
+
+    const data = await response.json();
+    // Aquí procesas y muestras la data
+    console.log('Asistencias del alumno:', data);
+
+  } catch (error) {
+    console.error('Error al cargar la asistencia:', error);
+    alert('Error al cargar la asistencia');
+  }
+}
+
+
+    // Renderizar tabla
+    function renderizarAsistencias(data) {
+      const tbody = document.getElementById('asistenciaTabla');
+      tbody.innerHTML = '';
+      data.forEach(({ fecha, estado }) => {
+        tbody.innerHTML += `
+          <tr>
+            <td>${new Date(fecha).toLocaleDateString()}</td>
+            <td>${estado}</td>
+          </tr>
+        `;
+      });
+    }
+
+    // Escuchar el filtro
+    document.getElementById('filterForm').addEventListener('submit', e => {
+      e.preventDefault();
+      aplicarFiltros();
+    });
+
+    // Aplicar filtros y actualizar tabla + estadísticas
+    function aplicarFiltros() {
+      const fechaFiltro = document.getElementById('filterDate').value;
+      const estadoFiltro = document.getElementById('filterEstado').value;
+
+      let filtradas = [...asistencias];
+
+      if (fechaFiltro) {
+        filtradas = filtradas.filter(a => a.fecha.startsWith(fechaFiltro));
+      }
+      if (estadoFiltro) {
+        filtradas = filtradas.filter(a => a.estado === estadoFiltro);
+      }
+
+      renderizarAsistencias(filtradas);
+      actualizarEstadisticas(filtradas);
+    }
+
+    // Calcular y mostrar porcentajes de estados para el mes actual
+    function actualizarEstadisticas(data) {
+      if (data.length === 0) {
+        document.getElementById('porcentajePresente').textContent = '0%';
+        document.getElementById('porcentajeAusente').textContent = '0%';
+        document.getElementById('porcentajeJustificado').textContent = '0%';
+        return;
+      }
+
+      // Filtrar solo las asistencias del mes actual
+      const now = new Date();
+      const mesActual = now.getMonth();
+      const anioActual = now.getFullYear();
+
+      const delMes = data.filter(({ fecha }) => {
+        const d = new Date(fecha);
+        return d.getMonth() === mesActual && d.getFullYear() === anioActual;
+      });
+
+      if (delMes.length === 0) {
+        document.getElementById('porcentajePresente').textContent = '0%';
+        document.getElementById('porcentajeAusente').textContent = '0%';
+        document.getElementById('porcentajeJustificado').textContent = '0%';
+        return;
+      }
+
+      const presentes = delMes.filter(a => a.estado === 'Presente').length;
+      const ausentes = delMes.filter(a => a.estado === 'Ausente').length;
+      const justificados = delMes.filter(a => a.estado === 'Justificado').length;
+
+      document.getElementById('porcentajePresente').textContent = `${((presentes / delMes.length) * 100).toFixed(1)}%`;
+      document.getElementById('porcentajeAusente').textContent = `${((ausentes / delMes.length) * 100).toFixed(1)}%`;
+      document.getElementById('porcentajeJustificado').textContent = `${((justificados / delMes.length) * 100).toFixed(1)}%`;
+    }
+  </script>
+
+</body>
+</html>
