@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,58 +8,59 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <style>
-    :root {
-      --sidebar-width: 250px;
-      --header-height: 60px;
-    }
+        :root {
+            --sidebar-width: 250px;
+            --header-height: 60px;
+        }
 
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-    .sidebar {
-      width: var(--sidebar-width);
-      height: 100vh;
-      position: fixed;
-      background: #2c3e50;
-      color: white;
-      transition: all 0.3s;
-    }
+        .sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            position: fixed;
+            background: #2c3e50;
+            color: white;
+            transition: all 0.3s;
+        }
 
-    .main-content {
-      margin-left: var(--sidebar-width);
-      padding: 20px;
-    }
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 20px;
+        }
 
-    .navbar {
-      height: var(--header-height);
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    }
+        .navbar {
+            height: var(--header-height);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
 
-    .card {
-      border: none;
-      border-radius: 10px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      transition: transform 0.3s;
-    }
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
 
-    .card:hover {
-      transform: translateY(-5px);
-    }
+        .card:hover {
+            transform: translateY(-5px);
+        }
 
-    .user-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: #3498db;
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-    }
-  </style>
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #3498db;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+    </style>
 </head>
+
 <body>
     <!-- Sidebar -->
     <div class="sidebar p-3">
@@ -67,34 +69,22 @@
         </div>
         <ul class="nav flex-column" id="sidebarMenu">
             <li class="nav-item">
-                <a class="nav-link text-white" href="dashboard.html">
-                    <i class="bi bi-speedometer2 me-2"></i>Dashboard
-                </a>
+                <a class="nav-link text-white" href="dashboard.html"><i
+                        class="bi bi-speedometer2 me-2"></i>Dashboard</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link text-white active" href="admin-users.html">
-                    <i class="bi bi-people me-2"></i>Usuarios
-                </a>
+                <a class="nav-link text-white" href="admin-users.html"><i class="bi bi-people me-2"></i>Usuarios</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link text-white" href="admin-grados.html">
-                    <i class="bi bi-book me-2"></i>Grados
-                </a>
+                <a class="nav-link text-white" href="admin-grados.html"><i class="bi bi-book me-2"></i>Grados</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link text-white" href="docente-asistencia.html">
-                    <i class="bi bi-clipboard-data me-2"></i>Reportes
-                </a>
+                <a class="nav-link text-white" href="asignacion-alumno.html"><i
+                        class="bi bi-person-plus me-2"></i>Asignar Alumnos</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link text-white" href="asignacion-alumno.html">
-                    <i class="bi bi-clipboard-data me-2"></i>asignacion de alumnos
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link text-white" href="asistencia.html">
-                    <i class="bi bi-clipboard-data me-2"></i>asistencia
-                </a>
+                <a class="nav-link text-white active" href="asistencia.html"><i
+                        class="bi bi-check2-square me-2"></i>Asistencia</a>
             </li>
         </ul>
     </div>
@@ -141,7 +131,7 @@
                             </button>
                         </div>
                     </div>
-                    
+
                     <div class="table-responsive">
                         <table class="table table-hover" id="asistenciaTable">
                             <thead class="table-light">
@@ -154,12 +144,13 @@
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td colspan="4" class="text-center">Seleccione un grado y fecha para cargar las asistencias</td>
+                                    <td colspan="4" class="text-center">Seleccione un grado y fecha para cargar las
+                                        asistencias</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-                    
+
                     <nav>
                         <ul id="asistenciasPagination" class="pagination justify-content-center mt-3"></ul>
                     </nav>
@@ -230,7 +221,7 @@
             try {
                 // Decodificar token para obtener información del usuario
                 const payload = JSON.parse(atob(token.split('.')[1]));
-                
+
                 // Mostrar información del usuario en el navbar
                 document.getElementById('username').textContent = payload.nombre || 'Usuario';
                 document.getElementById('userRole').textContent = payload.rol || 'Administrador';
@@ -239,7 +230,7 @@
                 // Establecer fecha actual por defecto
                 const today = new Date().toISOString().split('T')[0];
                 document.getElementById('fechaInput').value = today;
-                
+
                 // Cargar datos iniciales
                 await loadGrades();
 
@@ -263,12 +254,12 @@
                 const response = await fetch('http://localhost:5000/api/admin/grados', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-                
+
                 if (!response.ok) throw new Error('Error al cargar grados');
-                
+
                 allGrades = await response.json();
                 updateGradeDropdown();
-                
+
             } catch (error) {
                 console.error("Error al cargar grados:", error);
                 alert('Error al cargar la lista de grados');
@@ -279,7 +270,7 @@
         function updateGradeDropdown() {
             const dropdown = document.getElementById('gradoSelect');
             dropdown.innerHTML = '<option value="">Seleccione un grado</option>';
-            
+
             allGrades.forEach(grade => {
                 dropdown.innerHTML += `
                     <option value="${grade.id}">${grade.nombre}</option>
@@ -291,43 +282,43 @@
         async function loadAsistencias() {
             const gradoId = document.getElementById('gradoSelect').value;
             const fecha = document.getElementById('fechaInput').value;
-            
+
             if (!gradoId || !fecha) {
                 alert('Por favor seleccione un grado y una fecha');
                 return;
             }
-            
+
             try {
                 const token = localStorage.getItem('token');
-                
+
                 // Mostrar carga
                 document.querySelector('#asistenciaTable tbody').innerHTML = `
                     <tr>
                         <td colspan="4" class="text-center">Cargando asistencias...</td>
                     </tr>
                 `;
-                
+
                 // Cargar alumnos del grado
                 const alumnosResponse = await fetch(`http://localhost:5000/api/admin/grados/${gradoId}/alumnos`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-                
+
                 if (!alumnosResponse.ok) throw new Error('Error al cargar alumnos');
-                
+
                 allStudents = await alumnosResponse.json();
-                
+
                 // Cargar asistencias existentes
                 const asistenciasResponse = await fetch(`http://localhost:5000/api/asistencias?gradoId=${gradoId}&fecha=${fecha}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-                
+
                 if (!asistenciasResponse.ok) throw new Error('Error al cargar asistencias');
-                
+
                 const asistenciasData = await asistenciasResponse.json();
                 currentAsistencias = asistenciasData.asistencias || [];
-                
+
                 renderAsistencias();
-                
+
             } catch (error) {
                 console.error("Error al cargar asistencias:", error);
                 document.querySelector('#asistenciaTable tbody').innerHTML = `
@@ -342,11 +333,11 @@
         function renderAsistencias() {
             const tbody = document.querySelector('#asistenciaTable tbody');
             tbody.innerHTML = '';
-            
+
             // Paginación
             const startIndex = (currentPage - 1) * itemsPerPage;
             const paginatedStudents = allStudents.slice(startIndex, startIndex + itemsPerPage);
-            
+
             if (paginatedStudents.length === 0) {
                 tbody.innerHTML = `
                     <tr>
@@ -362,7 +353,7 @@
                 const asistencia = currentAsistencias.find(a => a.alumno_id == student.id);
                 const estado = asistencia?.estado || 'presente';
                 const justificacion = asistencia?.justificacion || '';
-                
+
                 tbody.innerHTML += `
                     <tr>
                         <td>${student.nombre} ${student.apellido}</td>
@@ -382,7 +373,7 @@
                     </tr>
                 `;
             });
-            
+
             renderAsistenciasPagination();
         }
 
@@ -390,9 +381,9 @@
         function renderAsistenciasPagination() {
             const pagination = document.getElementById('asistenciasPagination');
             pagination.innerHTML = '';
-            
+
             const totalPages = Math.ceil(allStudents.length / itemsPerPage);
-            
+
             if (totalPages <= 1) return;
 
             // Botón Anterior
@@ -420,22 +411,22 @@
         }
 
         // Cambiar página de asistencias
-        window.changeAsistenciasPage = function(page) {
+        window.changeAsistenciasPage = function (page) {
             currentPage = page;
             renderAsistencias();
             window.scrollTo(0, 0);
         };
 
         // Mostrar modal para editar asistencia
-        window.editAsistencia = function(alumnoId, alumnoNombre, estado, justificacion) {
+        window.editAsistencia = function (alumnoId, alumnoNombre, estado, justificacion) {
             document.getElementById('asistenciaId').value = alumnoId;
             document.getElementById('alumnoNombre').value = alumnoNombre;
             document.getElementById('asistenciaFecha').value = document.getElementById('fechaInput').value;
             document.getElementById('asistenciaEstado').value = estado;
             document.getElementById('asistenciaJustificacion').value = justificacion;
-            
+
             toggleJustificacion();
-            
+
             new bootstrap.Modal(document.getElementById('asistenciaModal')).show();
         };
 
@@ -443,7 +434,7 @@
         function toggleJustificacion() {
             const estado = document.getElementById('asistenciaEstado').value;
             const container = document.getElementById('justificacionContainer');
-            
+
             if (estado === 'justificado') {
                 container.style.display = 'block';
             } else {
@@ -458,22 +449,22 @@
             const justificacion = document.getElementById('asistenciaJustificacion').value;
             const fecha = document.getElementById('asistenciaFecha').value;
             const gradoId = document.getElementById('gradoSelect').value;
-            
+
             if (estado === 'justificado' && !justificacion.trim()) {
                 alert('Por favor ingrese una justificación');
                 return;
             }
-            
+
             try {
                 const token = localStorage.getItem('token');
                 const btn = document.getElementById('guardarAsistenciaBtn');
-                
+
                 btn.disabled = true;
                 btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Guardando...';
-                
+
                 // Buscar si ya existe una asistencia para este alumno en esta fecha
                 const asistenciaExistente = currentAsistencias.find(a => a.alumno_id == alumnoId);
-                
+
                 let response;
                 if (asistenciaExistente) {
                     // Actualizar asistencia existente
@@ -505,15 +496,15 @@
                         })
                     });
                 }
-                
+
                 if (!response.ok) throw new Error('Error al guardar asistencia');
-                
+
                 // Recargar asistencias
                 await loadAsistencias();
-                
+
                 // Cerrar modal
                 bootstrap.Modal.getInstance(document.getElementById('asistenciaModal')).hide();
-                
+
             } catch (error) {
                 console.error("Error al guardar asistencia:", error);
                 alert('Error al guardar la asistencia');
@@ -526,7 +517,7 @@
 
         // Obtener clase CSS para el badge según el estado
         function getEstadoBadgeClass(estado) {
-            switch(estado) {
+            switch (estado) {
                 case 'presente': return 'bg-success status-present';
                 case 'ausente': return 'bg-danger status-absent';
                 case 'tardanza': return 'bg-warning status-late';
@@ -537,7 +528,7 @@
 
         // Obtener texto legible para el estado
         function getEstadoText(estado) {
-            switch(estado) {
+            switch (estado) {
                 case 'presente': return 'Presente';
                 case 'ausente': return 'Ausente';
                 case 'tardanza': return 'Tardanza';
@@ -553,4 +544,5 @@
         }
     </script>
 </body>
+
 </html>
